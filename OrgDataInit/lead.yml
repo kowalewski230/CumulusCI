@@ -1,0 +1,113 @@
+- plugin: snowfakery.standard_plugins.Salesforce.SalesforceQuery
+- plugin: snowfakery.standard_plugins.datasets.Dataset
+- plugin: snowfakery.standard_plugins.base64.Base64
+- plugin: snowfakery.standard_plugins.file.File
+- option: num_record
+  default: 1
+
+- var: ownerUser
+  value:
+    SalesforceQuery.random_record:
+      fields: Id, FirstName, LastName
+      from: User Where Profile.UserLicense.Name = 'Salesforce' AND isActive = true
+- macro: owner_and_createdate
+  fields:
+    OwnerId: ${{ownerUser.Id}}
+    CreatedById: ${{ownerUser.Id}}
+    LastModifiedById: ${{ownerUser.Id}}
+- macro: event_fields
+  fields:
+    CreatedById: ${{ownerUser.Id}}
+    CreatedDate: 
+      fake.datetime:
+        start_date: -365d
+        end_date: now
+    Subject: 
+      fake: CatchPhrase
+    StartDateTime:
+      fake.datetime:
+        start_date: -180d
+        end_date: +180d
+    EndDateTime: ${{date(StartDateTime) + relativedelta(days=1)}}
+    Type:
+      random_choice:
+        - choice:
+            probability: 30%
+            pick: Email
+        - choice:
+            probability: 40%
+            pick: Call
+        - choice:
+            probability: 30%
+            pick: Meeting
+    Description: ${{fake.Paragraph(nb_sentences=5)}}
+- macro: task_fields
+  fields:
+    CreatedDate: 
+      fake.datetime:
+        start_date: -365d
+        end_date: now
+    Subject: 
+      fake: CatchPhrase
+    ActivityDate:
+      fake.datetime:
+        start_date: -60d
+        end_date: now
+    Status:
+      random_choice:
+        - choice:
+            probability: 60%
+            pick: Completed
+    TaskSubtype: 
+      random_choice:
+        - choice:
+            probability: 30%
+            pick: Task
+        - choice:
+            probability: 30%
+            pick: Call
+        - choice:
+            probability: 40%
+            pick: Email
+    Description: ${{fake.Paragraph(nb_sentences=5)}}
+
+# Highly randomized objects
+- var: snowfakery_locale
+  value:
+    random_choice:
+      - fi_FI
+      - sv_SE 
+      - pl_PL  
+- object: Lead
+  count: ${{num_record}}
+  include: owner_and_createdate
+  fields:
+    CreatedDate: 
+      fake.datetime:
+        start_date: -365d
+        end_date: now
+    LastName:
+      fake: FirstName
+    Company:
+      fake: Company
+  friends:
+    - var: snowfakery_locale
+      value: en_US
+    - object: Task
+      count:
+        random_number:
+          min: 2
+          max: 4
+      include: task_fields
+      fields:
+        WhoId:
+          reference: Lead
+    - object: Event
+      count:
+        random_number:
+          min: 2
+          max: 4
+      include: event_fields
+      fields:
+        WhoId:
+          reference: Lead

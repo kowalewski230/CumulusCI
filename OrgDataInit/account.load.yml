@@ -1,0 +1,66 @@
+- sf_object: ContentVersion
+  api: rest
+  batch_size: 10
+  bulk_mode: parallel
+  load_after: Event
+
+- sf_object: Event
+  api: rest
+  batch_size: 200
+  bulk_mode: parallel
+  load_after: Task
+
+- sf_object: Task
+  api: rest
+  batch_size: 200
+  bulk_mode: parallel
+  load_after: Quote
+
+- sf_object: Quote
+  api: bulk
+  bulk_mode: parallel
+  batch_size: 200 
+  load_after: OpportunityLineItem
+  
+- sf_object: OpportunityLineItem
+  api: rest
+  batch_size: 200
+  bulk_mode: parallel
+  load_after: Opportunity
+
+- sf_object: Opportunity
+  api: rest
+  batch_size: 200
+  bulk_mode: parallel
+  load_after: Contact
+
+- sf_object: Contact
+  api: rest
+  batch_size: 200
+  bulk_mode: parallel
+  load_after: Account
+
+- sf_object: Account
+  api: rest
+  batch_size: 200
+  bulk_mode: parallel
+  load_after: PricebookEntry
+
+- sf_object: PricebookEntry
+  api: rest
+  batch_size: 200
+  bulk_mode: parallel
+  load_after: Product2
+
+- sf_object: Product2
+  api: rest
+  batch_size: 200
+  bulk_mode: parallel
+
+
+
+
+
+
+
+

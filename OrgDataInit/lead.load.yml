@@ -1,0 +1,16 @@
+- sf_object: Event
+  api: rest
+  batch_size: 200
+  bulk_mode: parallel
+  load_after: Task
+
+- sf_object: Task
+  api: rest
+  batch_size: 200
+  bulk_mode: parallel
+  load_after: Lead
+  
+- sf_object: Lead
+  api: rest
+  batch_size: 200
+  bulk_mode: parallel

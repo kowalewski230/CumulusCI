@@ -1,0 +1,295 @@
+- plugin: snowfakery.standard_plugins.Salesforce.SalesforceQuery
+- plugin: snowfakery.standard_plugins.datasets.Dataset
+- plugin: snowfakery.standard_plugins.base64.Base64
+- plugin: snowfakery.standard_plugins.file.File
+- option: num_record
+  default: 1
+- var: ownerUser
+  value:
+    SalesforceQuery.random_record:
+      fields: Id, FirstName, LastName
+      from: User Where Profile.UserLicense.Name = 'Salesforce' AND isActive = true
+- macro: owner_and_createdate
+  fields:
+    OwnerId: ${{ownerUser.Id}}
+    CreatedById: ${{ownerUser.Id}}
+    LastModifiedById: ${{ownerUser.Id}}
+- macro: event_fields
+  fields:
+    CreatedById: ${{ownerUser.Id}}
+    OwnerId: ${{ownerUser.Id}}
+    LastModifiedById: ${{ownerUser.Id}}
+    CreatedDate: 
+      fake.datetime:
+        start_date: -365d
+        end_date: now
+    Subject: 
+      fake: CatchPhrase
+    StartDateTime:
+      fake.datetime:
+        start_date: -180d
+        end_date: +180d
+    EndDateTime: ${{date(StartDateTime) + relativedelta(days=1)}}
+    Type:
+      random_choice:
+        - choice:
+            probability: 30%
+            pick: Email
+        - choice:
+            probability: 40%
+            pick: Call
+        - choice:
+            probability: 30%
+            pick: Meeting
+    Description: ${{fake.Paragraph(nb_sentences=5)}}
+- macro: task_fields
+  fields:
+    CreatedById: ${{ownerUser.Id}}
+    OwnerId: ${{ownerUser.Id}}
+    LastModifiedById: ${{ownerUser.Id}}
+    CreatedDate: 
+      fake.datetime:
+        start_date: -365d
+        end_date: now
+    Subject: 
+      fake: CatchPhrase
+    ActivityDate:
+      fake.datetime:
+        start_date: -60d
+        end_date: now
+    Status:
+      random_choice:
+        - choice:
+            probability: 60%
+            pick: Completed
+    TaskSubtype: 
+      random_choice:
+        - choice:
+            probability: 30%
+            pick: Task
+        - choice:
+            probability: 30%
+            pick: Call
+        - choice:
+            probability: 40%
+            pick: Email
+    Description: ${{fake.Paragraph(nb_sentences=5)}}
+
+
+# - var: standardPriceBook
+#   value:
+#     SalesforceQuery.random_record:
+#       fields: Id
+#       from: Pricebook2 Where isActive = true AND IsStandard = true
+
+- var: snowfakery_locale
+  value:
+    random_choice:
+      - fi_FI
+      - sv_SE 
+      - pl_PL 
+
+- object: Product2
+  just_once: true
+  count: 30
+  fields:
+    __productName_from_csv:
+      Dataset.shuffle:
+        dataset: dataset/products.csv
+    Name: ${{__productName_from_csv.Name}}
+    Family: Camera
+    isActive: ${{fake.Boolean(chance_of_getting_true=90)}}
+    CanUseRevenueSchedule: true
+  friends:
+    - object: PricebookEntry
+      fields:
+        IsActive: true
+        CurrencyIsoCode:
+          random_choice:
+            - PLN
+        UnitPrice: 
+          random_number:
+            min: 50
+            max: 1000
+        Pricebook2Id: 01s7Q00000B7XyyQAF
+        Product2Id: 
+          reference: Product2
+- var: snowfakery_locale
+  value:
+    random_choice:
+      - fi_FI
+      - sv_SE 
+      - pl_PL      
+- object: Account
+  count: ${{num_record}}
+  include: owner_and_createdate
+  fields:
+    Name:
+      fake: Company
+    Description:
+      fake: catch_phrase
+    BillingStreet:
+      fake: street_address
+    BillingCity:
+      fake: city
+    BillingState:
+      fake: state
+    BillingPostalCode:
+      fake: postalcode
+    BillingCountry: 
+      fake: CurrentCountry
+    ShippingStreet:
+      fake: street_address
+    ShippingCity:
+      fake: city
+    ShippingState:
+      fake: state
+    ShippingPostalCode:
+      fake: postalcode
+    ShippingCountry:
+      fake: country
+    Phone:
+      fake: phone_number
+    Fax:
+      fake: phone_number
+    Website:
+      fake: uri
+    NumberOfEmployees:
+      random_number:
+        min: 0
+        max: 200000
+    AccountNumber:
+      random_number:
+        min: 0
+        max: 10000000 
+  friends:
+    - object: Contact
+      count:
+        random_number:
+          min: 2
+          max: 5
+      include: owner_and_createdate
+      fields:
+        Salutation:
+          fake: prefix
+        FirstName:
+          fake: FirstName
+        LastName:
+          fake: LastName
+        Email:
+          fake: email
+        Phone:
+          fake: phone_number
+        MobilePhone:
+          fake: phone_number
+        Title:
+          fake: job
+        Birthdate:
+          fake.date_between:
+            start_date: -50y
+            end_date: -20y
+        AccountId: 
+          reference: Account
+    - object: Opportunity
+      count:
+        random_number:
+          min: 1
+          max: 3
+      include: owner_and_createdate
+      fields:
+        Name: ${{fake.word}} Opportunity
+        CloseDate:
+          date_between:
+            start_date: -30d
+            end_date: +180d
+        Amount:
+          random_number:
+            min: 1000
+            max: 10000
+        StageName:
+          random_choice:
+            - choice:
+                probability: 60%
+                pick: Closed Won
+            - choice:
+                probability: 20%
+                pick: In Progress
+            - choice:
+                probability: 60%
+                pick: New
+        Pricebook2Id: 01s7Q00000B7XyyQAF
+        AccountId:
+          reference: Account
+        SyncedQuoteId:
+          - object: Quote
+            fields:
+              Name: ${{Opportunity.Name}}
+              OpportunityId:
+                reference: Opportunity
+            friends:
+              - object: ContentVersion
+                count: 
+                  random_number:
+                    min: 3
+                    max: 6
+                fields:
+                  Title: Attachment for ${{Quote.Name}}
+                  PathOnClient: dataset/example.pdf
+                  Description: example.pdf
+                  VersionData:
+                    Base64.encode:
+                      - File.file_data:
+                          encoding: binary
+                          file: ${{PathOnClient}}
+                  FirstPublishLocationId:
+                    reference: Quote
+      friends:
+        - object: OpportunityLineItem
+          count:
+            random_number:
+              min: 2
+              max: 3
+          fields:
+            __PricebookEntry:
+              random_reference: PricebookEntry
+            Quantity:
+              random_number:
+                min: 1
+                max: 3
+            Discount:
+              random_choice:
+                - 0
+                - 10
+                - 15
+                - 30
+            UnitPrice: ${{__PricebookEntry.UnitPrice}}
+            Product2Id: 
+              reference: __PricebookEntry.Product2Id
+            OpportunityId:
+              reference: Opportunity
+        - var: snowfakery_locale
+          value: en_US
+        # Contact Opportunity Events
+        - object: Event
+          count:
+            random_number:
+              min: 2
+              max: 4
+          include: event_fields
+          fields:
+            WhoId:
+              random_reference: Contact
+            WhatId:
+              random_reference: Opportunity
+        # Contact Opportunity Tasks
+        - object: Task
+          count:
+            random_number:
+              min: 2
+              max: 4
+          include: task_fields
+          fields:
+            WhoId:
+              random_reference: Contact
+            WhatId:
+              random_reference: Opportunity
