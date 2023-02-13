@@ -29,17 +29,17 @@
         start_date: -180d
         end_date: +180d
     EndDateTime: ${{date(StartDateTime) + relativedelta(days=1)}}
-    Type:
-      random_choice:
-        - choice:
-            probability: 30%
-            pick: Email
-        - choice:
-            probability: 40%
-            pick: Call
-        - choice:
-            probability: 30%
-            pick: Meeting
+    # Type:
+    #   random_choice:
+    #     - choice:
+    #         probability: 30%
+    #         pick: Email
+    #     - choice:
+    #         probability: 40%
+    #         pick: Call
+    #     - choice:
+    #         probability: 30%
+    #         pick: Meeting
     Description: ${{fake.Paragraph(nb_sentences=5)}}
 - macro: task_fields
   fields:
@@ -77,7 +77,6 @@
     random_choice:
       - fi_FI
       - sv_SE 
-      - pl_PL  
 - object: Lead
   count: ${{num_record}}
   include: owner_and_createdate
@@ -88,8 +87,34 @@
         end_date: now
     LastName:
       fake: FirstName
+    ProductOfInterest__c:
+      random_choice:
+        - Marell M12
+        - Marell M25
+        - Marell M17
+    Quantity__c:
+      random_number:
+        min: 1
+        max: 3
+    Status:
+      random_choice:
+        - New
+        - In Progress
+        - Dead
+        - Postponed
     Company:
       fake: Company
+    Phone:
+      fake: phone_number
+    Email:
+      fake: email
+    LeadSource:
+      random_choice:
+        - Web
+        - Phone Inquiry
+        - Partner Referral
+        - Purchased List
+        - Other
   friends:
     - var: snowfakery_locale
       value: en_US
